@@ -123,3 +123,85 @@ func (r *ChatRepositoryMySQL) FindChatByID(ctx context.Context, chatID string) (
 	}
 	return chat, nil
 }
+
+func (r *ChatRepositoryMySQL) SaveChat(ctx context.Context, chat *entity.Chat) error {
+	params := db.SaveChatParams{
+		ID:               chat.ID,
+		UserID:           chat.UserID,
+		Status:           chat.Status,
+		TokenUsage:       int32(chat.TokensUsage),
+		Model:            chat.Config.Model.Name,
+		ModelMaxTokens:   int32(chat.Config.Model.MaxTokens),
+		Temperature:      float64(chat.Config.Temperature),
+		TopP:             float64(chat.Config.TopP),
+		N:                int32(chat.Config.N),
+		Stop:             chat.Config.Stop[0],
+		MaxTokens:        int32(chat.Config.MaxTokens),
+		PresencePenalty:  float64(chat.Config.PresencePenalty),
+		FrequencyPenalty: float64(chat.Config.FrequencyPenalty),
+		UpdatedAt:        time.Now(),
+	}
+
+	err := r.Queries.SaveChat(
+		ctx,
+		params,
+	)
+	if err != nil {
+		return err
+	}
+	// delete messages
+	err = r.Queries.DeleteChatMessages(ctx, chat.ID)
+	if err != nil {
+		return err
+	}
+	// delete erased messages
+	err = r.Queries.DeleteErasedChatMessages(ctx, chat.ID)
+	if err != nil {
+		return err
+	}
+	// save messages
+	i := 0
+	for _, message := range chat.Messages {
+		err = r.Queries.AddMessage(
+			ctx,
+			db.AddMessageParams{
+				ID:        message.ID,
+				ChatID:    chat.ID,
+				Content:   message.Content,
+				Role:      message.Role,
+				Tokens:    int32(message.Tokens),
+				Model:     chat.Config.Model.Name,
+				CreatedAt: message.CreatedAt,
+				OrderMsg:  int32(i),
+				Erased:    false,
+			},
+		)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	// save erased messages
+	i = 0
+	for _, message := range chat.ErasedMessages {
+		err = r.Queries.AddMessage(
+			ctx,
+			db.AddMessageParams{
+				ID:        message.ID,
+				ChatID:    chat.ID,
+				Content:   message.Content,
+				Role:      message.Role,
+				Tokens:    int32(message.Tokens),
+				Model:     chat.Config.Model.Name,
+				CreatedAt: message.CreatedAt,
+				OrderMsg:  int32(i),
+				Erased:    true,
+			},
+		)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	return nil
+}
