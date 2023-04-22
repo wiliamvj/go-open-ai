@@ -8,11 +8,11 @@ import (
 type ChatService struct {
 	pb.UnimplementedChatServiceServer
 	ChatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase
-	ChatConfigStream            chatcompletionstream.ChatCompletionConfigDTO
+	ChatConfigStream            chatcompletionstream.ChatCompletionConfigInputDTO
 	StreamChannel               chan chatcompletionstream.ChatCompletionOutputDTO
 }
 
-func NewChatService(chatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase, chatConfigStream chatcompletionstream.ChatCompletionConfigDTO, streamChannel chan chatcompletionstream.ChatCompletionOutputDTO) *ChatService {
+func NewChatService(chatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase, chatConfigStream chatcompletionstream.ChatCompletionConfigInputDTO, streamChannel chan chatcompletionstream.ChatCompletionOutputDTO) *ChatService {
 	return &ChatService{
 		ChatCompletionStreamUseCase: chatCompletionStreamUseCase,
 		ChatConfigStream:            chatConfigStream,
@@ -21,7 +21,7 @@ func NewChatService(chatCompletionStreamUseCase chatcompletionstream.ChatComplet
 }
 
 func (c *ChatService) ChatStream(req *pb.ChatRequest, stream pb.ChatService_ChatStreamServer) error {
-	chatConfig := chatcompletionstream.ChatCompletionConfigDTO{
+	chatConfig := chatcompletionstream.ChatCompletionConfigInputDTO{
 		Model:                c.ChatConfigStream.Model,
 		ModelMaxTokens:       c.ChatConfigStream.ModelMaxTokens,
 		Temperature:          c.ChatConfigStream.Temperature,

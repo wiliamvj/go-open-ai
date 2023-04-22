@@ -15,14 +15,14 @@ import (
 
 type GRPCServer struct {
   ChatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase
-  ChatConfigStream            chatcompletionstream.ChatCompletionConfigDTO
+  ChatConfigStream            chatcompletionstream.ChatCompletionConfigInputDTO
   ChatService                 service.ChatService
   Port                        string
   AuthToken                   string
   StreamChannel               chan chatcompletionstream.ChatCompletionOutputDTO
 }
 
-func NewGRPCServer(chatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase, chatConfigStream chatcompletionstream.ChatCompletionConfigDTO, port, authToken string, streamChannel chan chatcompletionstream.ChatCompletionOutputDTO) *GRPCServer {
+func NewGRPCServer(chatCompletionStreamUseCase chatcompletionstream.ChatCompletionUseCase, chatConfigStream chatcompletionstream.ChatCompletionConfigInputDTO, port, authToken string, streamChannel chan chatcompletionstream.ChatCompletionOutputDTO) *GRPCServer {
   chatService := service.NewChatService(chatCompletionStreamUseCase, chatConfigStream, streamChannel)
   return &GRPCServer{
     ChatCompletionStreamUseCase: chatCompletionStreamUseCase,

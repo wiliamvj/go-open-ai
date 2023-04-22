@@ -42,7 +42,7 @@ func main() {
 		InitialSystemMessage: configs.InitialChatMessage,
 	}
 
-	chatConfigStream := chatcompletionstream.ChatCompletionConfigDTO{
+	chatConfigStream := chatcompletionstream.ChatCompletionConfigInputDTO{
 		Model:                configs.Model,
 		ModelMaxTokens:       configs.ModelMaxTokens,
 		Temperature:          float32(configs.Temperature),
@@ -56,7 +56,7 @@ func main() {
 	usecase := chatcompletion.NewChatCompletionUseCase(repo, client)
 
 	streamChannel := make(chan chatcompletionstream.ChatCompletionOutputDTO)
-	usecaseStream := chatcompletionstream.NewChatCompletitionUseCase(repo, client, streamChannel)
+	usecaseStream := chatcompletionstream.NewChatCompletionUseCase(repo, client, streamChannel)
 
 	fmt.Println("Starting gRPC server on port " + configs.GRPCServerPort)
 	grpcServer := server.NewGRPCServer(
