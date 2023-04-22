@@ -7,10 +7,12 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/sashabaranov/go-openai"
 	"github.com/wiliamvj/go-open-ai/configs"
+	"github.com/wiliamvj/go-open-ai/internal/infra/grpc/server"
 	"github.com/wiliamvj/go-open-ai/internal/infra/repository"
 	"github.com/wiliamvj/go-open-ai/internal/infra/web"
 	"github.com/wiliamvj/go-open-ai/internal/infra/web/webserver"
 	"github.com/wiliamvj/go-open-ai/internal/usecase/chatcompletion"
+	"github.com/wiliamvj/go-open-ai/internal/usecase/chatcompletionstream"
 )
 
 func main() {
@@ -40,21 +42,31 @@ func main() {
 		InitialSystemMessage: configs.InitialChatMessage,
 	}
 
-	// chatConfigStream := chatcompletionstream.ChatCompletionConfigDTO{
-	// 	Model:                configs.Model,
-	// 	ModelMaxTokens:       configs.ModelMaxTokens,
-	// 	Temperature:          float32(configs.Temperature),
-	// 	TopP:                 float32(configs.TopP),
-	// 	N:                    configs.N,
-	// 	Stop:                 configs.Stop,
-	// 	MaxTokens:            configs.MaxTokens,
-	// 	InitialSystemMessage: configs.InitialChatMessage,
-	// }
+	chatConfigStream := chatcompletionstream.ChatCompletionConfigDTO{
+		Model:                configs.Model,
+		ModelMaxTokens:       configs.ModelMaxTokens,
+		Temperature:          float32(configs.Temperature),
+		TopP:                 float32(configs.TopP),
+		N:                    configs.N,
+		Stop:                 configs.Stop,
+		MaxTokens:            configs.MaxTokens,
+		InitialSystemMessage: configs.InitialChatMessage,
+	}
 
 	usecase := chatcompletion.NewChatCompletionUseCase(repo, client)
 
-	// streamChannel := make(chan chatcompletionstream.ChatCompletionOutputDTO)
-	// usecaseStream := chatcompletionstream.NewChatCompletitionUseCase(repo, client, streamChannel)
+	streamChannel := make(chan chatcompletionstream.ChatCompletionOutputDTO)
+	usecaseStream := chatcompletionstream.NewChatCompletitionUseCase(repo, client, streamChannel)
+
+	fmt.Println("Starting gRPC server on port " + configs.GRPCServerPort)
+	grpcServer := server.NewGRPCServer(
+		*usecaseStream,
+		chatConfigStream,
+		configs.GRPCServerPort,
+		configs.AuthToken,
+		streamChannel,
+	)
+	go grpcServer.Start()
 
 	webserver := webserver.NewWebServer(":" + configs.WebServerPort)
 	webserverChatHandler := web.NewWebChatGPTHandler(*usecase, chatConfig, configs.AuthToken)
