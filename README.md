@@ -9,7 +9,7 @@ Technologies used
 - Docker
 - SQLC
 
-To count the tokens the [tiktoken-go](https://github.com/j178/tiktoken-go).
+To count the tokens using the [tiktoken-go](https://github.com/j178/tiktoken-go).
 
 To start docker
 ```
